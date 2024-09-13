@@ -36,9 +36,17 @@ pub fn example() {
         .add_plugins((splash::splash_plugin, menu::menu_plugin, game::game_plugin))
         .run();
 }
-
+const BOARD_SIZE_I: usize = 14;
+const BOARD_SIZE_J: usize = 21;
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        transform: Transform::from_xyz(
+            -(BOARD_SIZE_I as f32 / 2.0),    // X축
+            BOARD_SIZE_J as f32 / 2.0 - 0.5, // Y축
+            0.0, // Z축 (2D에서는 깊이를 나타내며, 대개 0이나 999.9 같은 값)
+        ),
+        ..default()
+    });
 }
 
 mod splash {
@@ -160,9 +168,8 @@ mod game {
                         style: Style {
                             // This will display its children in a column, from top to bottom
                             flex_direction: FlexDirection::Column,
-                            // `align_items` will align children on the cross axis. Here the main axis is
-                            // vertical (column), so the cross axis is horizontal. This will center the
-                            // children
+                            // `align_items`는 교차 축에서 자식을 정렬합니다. 여기서 주축은
+                            // 수직(열)이므로 교차 축은 수평입니다. 이렇게 하면 자식이 중앙에 배치됩니다.
                             align_items: AlignItems::Center,
                             ..default()
                         },
@@ -240,10 +247,10 @@ mod menu {
 
     use super::{despawn_screen, DisplayQuality, GameState, Volume, TEXT_COLOR};
 
-    // This plugin manages the menu, with 5 different screens:
-    // - a main menu with "New Game", "Settings", "Quit"
-    // - a settings menu with two submenus and a back button
-    // - two settings screen with a setting that can be set and a back button
+    // 이 플러그인은 5개의 다른 화면을 관리합니다:
+    // - "New Game", "Settings", "Quit"가 있는 메인 메뉴
+    // - 두 개의 하위 메뉴와 뒤로 가기 버튼이 있는 설정 메뉴
+    // - 설정을 변경할 수 있는 두 개의 설정 화면과 뒤로 가기 버튼
     pub fn menu_plugin(app: &mut App) {
         app
             // At start, the menu is not enabled. This will be changed in `menu_setup` when
@@ -255,7 +262,7 @@ mod menu {
             .add_systems(OnEnter(MenuState::Main), main_menu_setup)
             .add_systems(OnExit(MenuState::Main), despawn_screen::<OnMainMenuScreen>)
             // Systems to handle the settings menu screen
-            .add_systems(OnEnter(MenuState::Settings), settings_menu_setup)
+            // .add_systems(OnEnter(MenuState::Settings), settings_menu_setup)
             .add_systems(
                 OnExit(MenuState::Settings),
                 despawn_screen::<OnSettingsMenuScreen>,
@@ -377,9 +384,9 @@ mod menu {
     fn menu_setup(mut menu_state: ResMut<NextState<MenuState>>) {
         menu_state.set(MenuState::Main);
     }
-
+    //메인 메뉴 셋업
     fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        // Common style for all buttons on the screen
+        //버튼 스타일
         let button_style = Style {
             width: Val::Px(250.0),
             height: Val::Px(65.0),
@@ -449,24 +456,25 @@ mod menu {
                         // - settings
                         // - quit
                         parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: button_style.clone(),
-                                    background_color: NORMAL_BUTTON.into(),
-                                    ..default()
-                                },
-                                MenuButtonAction::Play,
-                            ))
+                            .spawn((NodeBundle {
+                                style: button_style.clone(),
+                                ..default()
+                            },))
                             .with_children(|parent| {
-                                let icon = asset_server.load("textures/Game Icons/right.png");
-                                parent.spawn(ImageBundle {
-                                    style: button_icon_style.clone(),
-                                    image: UiImage::new(icon),
-                                    ..default()
-                                });
+                                // 텍스트 입력을 표시할 TextBundle을 스폰
                                 parent.spawn(TextBundle::from_section(
-                                    "New Game",
+                                    "Enter your name:", // 입력 필드 라벨
                                     button_text_style.clone(),
+                                ));
+
+                                // 텍스트 입력 필드 (단순 텍스트 표시, 입력 로직은 별도 처리 필요)
+                                parent.spawn((
+                                    TextBundle::from_section(
+                                        "", // 초기 입력 값
+                                        button_text_style.clone(),
+                                    ),
+                                    // 여기에 추가적으로 TextInputAction 또는 커스텀 입력 타입을 붙일 수 있음
+                                    // MenuInputAction::TextInput,
                                 ));
                             });
                         parent

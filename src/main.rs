@@ -1,5 +1,7 @@
-pub mod login;
+mod background;
+mod keyboard;
+mod login;
 
-fn main(){
-    login::example();
+fn main() {
+    background::example();
 }
