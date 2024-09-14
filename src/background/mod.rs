@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use std::env;
 
-//ㄴ
 pub fn example() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        // .add_systems(OnEnter(GameState::Playing), setup)
+        .init_resource::<Game>()
+        .init_state::<GameState>()
+        .add_systems(Startup, setup_cameras)
+        .add_systems(OnEnter(GameState::Playing), setup)
         .run();
 }
 
@@ -16,9 +17,11 @@ enum GameState {
     Playing,
     GameOver,
 }
+
 struct Cell {
     height: f32,
 }
+
 #[derive(Default)]
 struct Player {
     entity: Option<Entity>,
@@ -45,59 +48,45 @@ struct Game {
     camera_should_focus: Vec3,
     camera_is_focus: Vec3,
 }
-// fn setup_cameras(mut commands: Commands) {
-//     commands.spawn(Camera2dBundle {
-//         transform: Transform::from_xyz(
-//             -(BOARD_SIZE_I as f32 / 2.0),    // X축
-//             BOARD_SIZE_J as f32 / 2.0 - 0.5, // Y축
-//             0.0, // Z축 (2D에서는 깊이를 나타내며, 대개 0이나 999.9 같은 값)
-//         ),
-//         ..default()
-//     });
-// }
-fn setup_cameras(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
 
-    // commands.spawn(Camera2dBundle {
-    //     transform: Transform::from_xyz(0.0, 0.0, 0.0), // 기본 카메라 위치
-    //     ..default()
-    // });
+fn setup_cameras(mut commands: Commands) {
+    commands.spawn(Camera2dBundle {
+        transform: Transform::from_xyz(0.0, 0.0, 0.0), // 기본 카메라 위치
+        ..Default::default()
+    });
 }
+
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut textures: ResMut<Assets<Image>>,
 ) {
-    let texture_handle = asset_server.load("img/test.png");
-    commands.spawn(Camera2dBundle::default());
+    let background_texture_handle = asset_server.load("img/test.png");
+    let character_texture_handle = asset_server.load("img/images.png"); // 캐릭터 이미지 로드
 
+    // 배경 스프라이트 추가
     commands.spawn(SpriteBundle {
-        texture: texture_handle.clone(),
-        // transform: Transform::from_xyz(200.0, 0.0, 0.0),
-        ..default()
+        texture: background_texture_handle.clone(),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0), // 배경을 카메라의 중앙에 위치
+        ..Default::default()
     });
+
+    // 캐릭터 스프라이트 추가
+    commands.spawn(SpriteBundle {
+        texture: character_texture_handle.clone(),
+        transform: Transform::from_xyz(-100.0, 0.0, 1.0), // 캐릭터의 위치 (배경보다 앞쪽)
+        ..Default::default()
+    });
+
     let current_dir = env::current_dir().unwrap();
     println!("Current directory: {:?}", current_dir);
 
-    // 이미지 경로 출력
     let texture_path = current_dir.join("img/test.png");
     println!("Loading texture from: {:?}", texture_path);
 
-    // 이미지가 로드되었는지 확인
-    if asset_server.get_load_state(&texture_handle).unwrap() == (bevy::asset::LoadState::Loaded) {
-        println!("Image successfully loaded!");
+    if asset_server.get_load_state(&background_texture_handle).unwrap() == bevy::asset::LoadState::Loaded {
+        println!("Background image successfully loaded!");
     } else {
-        println!("Image is still loading or failed to load.");
+        println!("Background image is still loading or failed to load.");
     }
 }
-// fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-//     commands.spawn(Camera2dBundle::default());
-
-//     let sprite_handle = asset_server.load("img/test.png");
-
-//     commands.spawn(SpriteBundle {
-//         texture: sprite_handle.clone(),
-//         ..default()
-//     });
-
-// }
