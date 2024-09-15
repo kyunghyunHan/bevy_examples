@@ -61,7 +61,7 @@ struct Game {
 fn setup_cameras(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 0.5, // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
+            scale: 1., // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
             ..Default::default()
         }.into(),
         transform: Transform::from_xyz(0.0, -200.0, 1.0), 
