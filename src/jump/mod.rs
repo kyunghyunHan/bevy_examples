@@ -128,30 +128,30 @@ struct Game {
 fn setup_cameras(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 1., // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
+            scale: 2., // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
             ..Default::default()
         }
         .into(),
-        transform: Transform::from_xyz(0.0, -200.0, 1.0),
+        transform: Transform::from_xyz(0.0, -200.0, 11.0),
         ..Default::default()
     });
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let background_texture_handle = asset_server.load("img/back.png");
+    let background_texture_handle = asset_server.load("img/back2.png");
 
     let character_texture_handle = asset_server.load("img/mipi.png");
     // 배경 스프라이트 추가
     commands.spawn(SpriteBundle {
         texture: background_texture_handle.clone(),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0), // 배경을 카메라의 중앙에 위치
+        transform: Transform::from_xyz(0.0, 0.0, -1.0), // 배경을 카메라의 중앙에 위치
         ..Default::default()
     }); 
     // 캐릭터 스프라이트 추가
     commands.spawn((
         SpriteBundle {
             texture: character_texture_handle.clone(),
-            transform: Transform::from_xyz(0.0, -100.0, 1.0), // 캐릭터 위치 (시작 높이)
+            transform: Transform::from_xyz(0.0, -200.0, 10.0), // 캐릭터 위치 (시작 높이)
             ..Default::default()
         },
         Jumper {
@@ -164,5 +164,5 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 
     // 카메라 추가
-    commands.spawn(Camera2dBundle::default());
+    // commands.spawn(Camera2dBundle::default());
 }
