@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 use std::env;
-/*
-backgrund
 
-*/
 pub fn example() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -52,29 +49,20 @@ struct Game {
     camera_is_focus: Vec3,
 }
 
-// fn setup_cameras(mut commands: Commands) {
-//     commands.spawn(Camera2dBundle {
-//         transform: Transform::from_xyz(0.0, 0.0, 0.0), // 기본 카메라 위치
-//         ..Default::default()
-//     });
-// }
 fn setup_cameras(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
-        projection: OrthographicProjection {
-            scale: 0.5, // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
-            ..Default::default()
-        }.into(),
-        transform: Transform::from_xyz(0.0, -200.0, 1.0), 
+        transform: Transform::from_xyz(0.0, 0.0, 0.0), // 기본 카메라 위치
         ..Default::default()
     });
 }
+
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut textures: ResMut<Assets<Image>>,
 ) {
     let background_texture_handle = asset_server.load("img/test.png");
-    let character_texture_handle = asset_server.load("img/images.png"); // 캐릭터 이미지 로드
+    let character_texture_handle = asset_server.load("img/test.gif"); // 캐릭터 이미지 로드
 
     // 배경 스프라이트 추가
     commands.spawn(SpriteBundle {
