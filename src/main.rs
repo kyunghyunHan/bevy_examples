@@ -1,7 +1,8 @@
 mod background;
+mod character;
+mod jump;
 mod keyboard;
 mod login;
-mod character;
 fn main() {
-    background::example();
+    jump::example();
 }

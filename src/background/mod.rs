@@ -73,7 +73,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut textures: ResMut<Assets<Image>>,
 ) {
-    let background_texture_handle = asset_server.load("img/test.png");
+    let background_texture_handle = asset_server.load("img/aaa.png");
     let character_texture_handle = asset_server.load("img/images.png"); // 캐릭터 이미지 로드
 
     // 배경 스프라이트 추가
@@ -93,7 +93,7 @@ fn setup(
     let current_dir = env::current_dir().unwrap();
     println!("Current directory: {:?}", current_dir);
 
-    let texture_path = current_dir.join("img/test.png");
+    let texture_path = current_dir.join("img/back.png");
     println!("Loading texture from: {:?}", texture_path);
 
     if asset_server.get_load_state(&background_texture_handle).unwrap() == bevy::asset::LoadState::Loaded {
