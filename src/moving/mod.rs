@@ -1,4 +1,3 @@
-
 use bevy::input::keyboard::KeyCode;
 use bevy::input::InputSystem;
 use bevy::prelude::*;
@@ -19,8 +18,8 @@ pub fn example() {
         .init_state::<GameState>()
         .add_systems(Startup, setup_cameras)
         .add_systems(OnEnter(GameState::Playing), setup)
-        .add_systems(Update, jump_system)
-        .add_systems(Update, apply_gravity_system)
+        .add_systems(Update, movement_system) // 이동 시스템으로 변경
+        // .add_systems(Update, apply_gravity_system)
         .run();
 }
 
@@ -33,61 +32,57 @@ enum GameState {
 
 #[derive(Component)]
 struct Jumper {
-    velocity: Vec3,     // 캐릭터의 속도
-    is_jumping: bool,   // 점프 중인지 확인하는 플래그
-    jump_impulse: f32,  // 점프할 때 적용할 힘
-    target_height: f32, // 목표 높이 (계단처럼 상승)
-    is_falling: bool,   // 하강 중인지 확인하는 플래그
+    velocity: Vec3,   // 캐릭터의 속도 (좌우, 상하 이동에 모두 사용)
 }
 const STAIRS_HEIGHT: f32 = 50.0;
 
-fn jump_system(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Jumper, &mut Transform)>,
-    time: Res<Time>,
-) {
-    for (mut jumper, mut transform) in query.iter_mut() {
-        if keyboard_input.just_pressed(KeyCode::Space) && !jumper.is_jumping && !jumper.is_falling {
-            println!("Jump!");
-            jumper.velocity.y = jumper.jump_impulse; // 점프 힘을 적용
-            jumper.is_jumping = true;
+// fn jump_system(
+//     keyboard_input: Res<ButtonInput<KeyCode>>,
+//     mut query: Query<(&mut Jumper, &mut Transform)>,
+//     time: Res<Time>,
+// ) {
+//     for (mut jumper, mut transform) in query.iter_mut() {
+//         if keyboard_input.just_pressed(KeyCode::Space) && !jumper.is_jumping && !jumper.is_falling {
+//             println!("Jump!");
+//             jumper.velocity.y = jumper.jump_impulse; // 점프 힘을 적용
+//             jumper.is_jumping = true;
 
-            // 목표 높이를 50씩 올림
-            jumper.target_height += 50.0;
-        }
+//             // 목표 높이를 50씩 올림
+//             jumper.target_height += 50.0;
+//         }
 
-        // 캐릭터 이동 업데이트
-        transform.translation += jumper.velocity * time.delta_seconds();
-    }
-}
+//         // 캐릭터 이동 업데이트
+//         transform.translation += jumper.velocity * time.delta_seconds();
+//     }
+// }
 
-fn apply_gravity_system(mut query: Query<(&mut Jumper, &mut Transform)>, time: Res<Time>) {
-    let gravity = -9.8 * 50.0; // 중력 값
+// fn apply_gravity_system(mut query: Query<(&mut Jumper, &mut Transform)>, time: Res<Time>) {
+//     let gravity = -9.8 * 50.0; // 중력 값
 
-    for (mut jumper, mut transform) in query.iter_mut() {
-        // 캐릭터가 플랫폼보다 높게 있으면 중력을 적용
-        if jumper.is_jumping {
-            jumper.velocity.y += gravity * time.delta_seconds();
-            transform.translation += jumper.velocity * time.delta_seconds();
+//     for (mut jumper, mut transform) in query.iter_mut() {
+//         // 캐릭터가 플랫폼보다 높게 있으면 중력을 적용
+//         if jumper.is_jumping {
+//             jumper.velocity.y += gravity * time.delta_seconds();
+//             transform.translation += jumper.velocity * time.delta_seconds();
 
-            // 플랫폼에 도달했는지 체크
-            if jumper.velocity.y < 0.0 {
-                if let Some(target_platform) = PLATFORM_HEIGHTS
-                    .iter()
-                    .rev()
-                    .find(|&&height| transform.translation.y >= height)
-                {
-                    if transform.translation.y <= *target_platform + 5.0 {
-                        // 플랫폼에 도달하면 위치 고정
-                        transform.translation.y = *target_platform;
-                        jumper.velocity.y = 0.0;
-                        jumper.is_jumping = false;
-                    }
-                }
-            }
-        }
-    }
-}
+//             // 플랫폼에 도달했는지 체크
+//             if jumper.velocity.y < 0.0 {
+//                 if let Some(target_platform) = PLATFORM_HEIGHTS
+//                     .iter()
+//                     .rev()
+//                     .find(|&&height| transform.translation.y >= height)
+//                 {
+//                     if transform.translation.y <= *target_platform + 5.0 {
+//                         // 플랫폼에 도달하면 위치 고정
+//                         transform.translation.y = *target_platform;
+//                         jumper.velocity.y = 0.0;
+//                         jumper.is_jumping = false;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 struct Cell {
     height: f32,
@@ -156,14 +151,33 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..Default::default()
         },
         Jumper {
-            velocity: Vec3::ZERO,
-            is_jumping: false,
-            jump_impulse: 300.0,   // 점프 힘
-            target_height: -100.0, // 처음 시작 위치
-            is_falling: false,     // 처음엔 하강 상태 아님
+            velocity: Vec3::ZERO, // 처음에는 속도 0
         },
     ));
+}
+fn movement_system(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut query: Query<(&mut Jumper, &mut Transform)>,
+    time: Res<Time>,
+) {
+    for (mut jumper, mut transform) in query.iter_mut() {
+        let mut direction = Vec3::ZERO;
 
-    // 카메라 추가
-    // commands.spawn(Camera2dBundle::default());
+        // 상하 좌우 이동을 위한 키 입력 처리
+        if keyboard_input.pressed(KeyCode::ArrowLeft) {
+            direction.x -= 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::ArrowRight) {
+            direction.x += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::ArrowUp) {
+            direction.y += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::ArrowDown) {
+            direction.y -= 1.0;
+        }
+
+        jumper.velocity = direction.normalize_or_zero() * 300.0; // 이동 속도 설정
+        transform.translation += jumper.velocity * time.delta_seconds(); // 캐릭터 위치 업데이트
+    }
 }
