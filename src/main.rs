@@ -6,5 +6,5 @@ mod jump;
 mod keyboard;
 mod login;
 fn main() {
-    moving::example();
+    jump::example();
 }

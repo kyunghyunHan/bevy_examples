@@ -128,7 +128,7 @@ struct Game {
 fn setup_cameras(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         projection: OrthographicProjection {
-            scale: 2., // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
+            scale: 1., // 카메라 줌 레벨. 값이 클수록 더 작은 영역을 확대해서 보여줌
             ..Default::default()
         }
         .into(),
@@ -140,7 +140,7 @@ fn setup_cameras(mut commands: Commands) {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let background_texture_handle = asset_server.load("img/back2.png");
 
-    let character_texture_handle = asset_server.load("img/mipi.png");
+    let character_texture_handle = asset_server.load("img/test4.png");
     // 배경 스프라이트 추가
     commands.spawn(SpriteBundle {
         texture: background_texture_handle.clone(),
