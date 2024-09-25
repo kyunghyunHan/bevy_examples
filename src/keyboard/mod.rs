@@ -1,49 +1,46 @@
 use bevy::prelude::*;
-use tokio::io;
-use tokio::net::UdpSocket;
+use bevy::tasks::{AsyncComputeTaskPool, Task};
+use std::net;
+use std::net::SocketAddr;
 
-// #[tokio::main]
-// async fn main() -> io::Result<()> {
-//     let socket = UdpSocket::bind("127.0.0.1:0").await?;
-//     let server_addr = "127.0.0.1:8080";
 
-//     let message = b"Player position update";
-//     socket.send_to(message, server_addr).await?;
-//     println!("Sent message to the server: {:?}", message);
-
-//     let mut buf = vec![0u8; 1024];
-//     let (len, addr) = socket.recv_from(&mut buf).await?;
-//     println!("Received {} bytes from {}: {:?}", len, addr, &buf[..len]);
-
-//     Ok(())
-// }
-
-pub async fn example() -> io::Result<()> {
- 
-
+pub fn example() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Update, keyboard_input_system)
         .run();
-
-    Ok(())
 }
 
-/// This system prints 'A' key state
- fn keyboard_input_system(keyboard_input: Res<ButtonInput<KeyCode>>) {
-    let message = b"Player pressed A";
+fn send(socket: &net::UdpSocket, receiver: &str, msg: &Vec<u8>) -> usize {
+    println!("서버로 메시지를 보냈습니다: {:?}", msg);
+    let result = socket
+        .send_to(msg, receiver)
+        .expect("failed to send message");
+    let mut buf = [0u8; 1024];
 
+    let (number_of_bytes, src_addr) = socket.recv_from(&mut buf).expect("no data received");
+    println!(
+        "{} 바이트를 {}로부터 받았습니다: {:?}",
+        number_of_bytes,
+        src_addr,
+        &buf[..number_of_bytes]
+    );
+    result
+}
 
-    let server_addr = "127.0.0.1:8080".to_string();
+fn keyboard_input_system(keyboard_input: Res<ButtonInput<KeyCode>>) {
+    if keyboard_input.just_pressed(KeyCode::KeyA) || keyboard_input.just_pressed(KeyCode::ArrowDown) {
+        let task_pool = AsyncComputeTaskPool::get();
 
-    tokio::spawn(async move {
-        let socket = UdpSocket::bind("127.0.0.1:0").await.unwrap();
-        if let Err(e) = socket.send_to(message, &server_addr).await {
-            eprintln!("Error sending message: {}", e);
+        let message = if keyboard_input.just_pressed(KeyCode::KeyA) {
+            b"A".to_vec() // A 키가 눌리면 "A" 메시지 전송
         } else {
-            println!("Sent message to the server: {:?}", message);
-        }
-    });
+            b"Down".to_vec() // 아래 화살표가 눌리면 "Down" 메시지 전송
+        };
 
-    info!("'A' just pressed");
+        task_pool.spawn(async move {
+            let socket = net::UdpSocket::bind("127.0.0.1:0").expect("failed to bind socket");
+            send(&socket, "127.0.0.1:8080", &message);
+        }).detach();
+    }
 }
