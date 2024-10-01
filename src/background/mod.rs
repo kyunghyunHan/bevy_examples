@@ -73,8 +73,8 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut textures: ResMut<Assets<Image>>,
 ) {
-    let background_texture_handle = asset_server.load("img/aaa.png");
-    let character_texture_handle = asset_server.load("img/images.png"); // 캐릭터 이미지 로드
+    let background_texture_handle = asset_server.load("img/back.png");
+    let character_texture_handle = asset_server.load("img/mipi.png"); // 캐릭터 이미지 로드
 
     // 배경 스프라이트 추가
     commands.spawn(SpriteBundle {

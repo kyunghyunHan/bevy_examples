@@ -1,5 +1,5 @@
-use bevy_examples::{keyboard,udp,tcp};
+use bevy_examples::{character,moving,background,keyboard,udp,tcp};
 
 fn main() {
-    udp::example();
+    character::example();
 }
