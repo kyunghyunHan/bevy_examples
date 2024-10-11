@@ -1,5 +1,6 @@
-use bevy_examples::{character,moving,background,keyboard,udp,tcp};
+use bevy_examples::{background, character, keyboard, moving, tcp, udp,physics};
 
 fn main() {
-    character::example();
+    physics::basic::ball_collisions::example();
+    // character::example();
 }
