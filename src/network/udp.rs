@@ -3,7 +3,6 @@ use bevy::tasks::{AsyncComputeTaskPool, Task};
 use std::net;
 use std::net::SocketAddr;
 
-
 pub fn example() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -29,7 +28,9 @@ fn send(socket: &net::UdpSocket, receiver: &str, msg: &Vec<u8>) -> usize {
 }
 
 fn keyboard_input_system(keyboard_input: Res<ButtonInput<KeyCode>>) {
-    if keyboard_input.just_pressed(KeyCode::KeyA) || keyboard_input.just_pressed(KeyCode::ArrowDown) {
+    if keyboard_input.just_pressed(KeyCode::KeyA) || keyboard_input.just_pressed(KeyCode::ArrowDown)
+    {
+        println!("1");
         let task_pool = AsyncComputeTaskPool::get();
 
         let message = if keyboard_input.just_pressed(KeyCode::KeyA) {
@@ -38,9 +39,11 @@ fn keyboard_input_system(keyboard_input: Res<ButtonInput<KeyCode>>) {
             b"Down".to_vec() // 아래 화살표가 눌리면 "Down" 메시지 전송
         };
 
-        task_pool.spawn(async move {
-            let socket = net::UdpSocket::bind("127.0.0.1:0").expect("failed to bind socket");
-            send(&socket, "127.0.0.1:8080", &message);
-        }).detach();
+        task_pool
+            .spawn(async move {
+                let socket = net::UdpSocket::bind("127.0.0.1:0").expect("failed to bind socket");
+                send(&socket, "127.0.0.1:8080", &message);
+            })
+            .detach();
     }
 }

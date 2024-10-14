@@ -5,6 +5,5 @@ pub mod character;
 pub mod jump;
 pub mod moving;
 pub mod basic;
-pub mod udp;
-pub mod tcp;
+pub mod network;
 pub mod physics;
