@@ -8,6 +8,18 @@ struct Pos(Vec2);
 // 컴포넌트 구조체 정의
 #[derive(Component, Debug, Default)]
 struct PrevPos(Vec2);
+#[derive(Debug, Default)]
+pub struct XPBDPlugin;
+struct MyPlugin;
+
+impl Plugin for MyPlugin {
+    fn build(&self, app: &mut App) {
+        // app.init_resource::<MyOtherResource>();
+        // app.add_event::<MyEvent>();
+        app.add_systems(Startup, simulate);
+        app.add_systems(Update, sync_transforms);
+    }
+}
 
 pub const DELTA_TIME: f32 = 1. / 60.;
 pub fn example() {
@@ -63,11 +75,11 @@ fn startup(
 //     }
 // }
 fn simulate(mut query: Query<(&mut Pos, &mut PrevPos)>) {
-    for (mut pos, mut prev_pos) in query.iter_mut() {
-        let velocity = (pos.0 - prev_pos.0) / DELTA_TIME;
-        prev_pos.0 = pos.0;
-        pos.0 += velocity * DELTA_TIME + Vec2::new(1.0, 0.0) * DELTA_TIME; // 움직임을 위해 일정한 방향으로 속도 추가
-    }
+    // for (mut pos, mut prev_pos) in query.iter_mut() {
+    //     let velocity = (pos.0 - prev_pos.0) / DELTA_TIME;
+    //     prev_pos.0 = pos.0;
+    //     pos.0 += velocity * DELTA_TIME + Vec2::new(1.0, 0.0) * DELTA_TIME; // 움직임을 위해 일정한 방향으로 속도 추가
+    // }
 }
 /// Copies positions from the physics world to bevy Transforms
 // fn sync_transforms(mut query: Query<(&mut bevy::transform::components::Transform, &Pos)>) {
@@ -78,8 +90,8 @@ fn simulate(mut query: Query<(&mut Pos, &mut PrevPos)>) {
 //     }
 // }
 fn sync_transforms(mut query: Query<(&mut bevy::transform::components::Transform, &Pos)>) {
-    for (mut transform, pos) in query.iter_mut() {
-        transform.translation = pos.0.extend(0.);
-        // 스케일을 변경하지 않고 유지
-    }
+    // for (mut transform, pos) in query.iter_mut() {
+    //     transform.translation = pos.0.extend(0.);
+    //     // 스케일을 변경하지 않고 유지
+    // }
 }
