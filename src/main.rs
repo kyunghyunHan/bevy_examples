@@ -11,5 +11,6 @@ fn main() {
     // simulation::bounce_ball::bouncing_ball();
     // simulation::single_window_queuing_system_problem::main();
     // simulation::multi_window_queue_system_simulatuin::main();
-    simulation::solar_system::main();
+    // simulation::solar_system::main();
+    simulation::blackhole::main();
 }
