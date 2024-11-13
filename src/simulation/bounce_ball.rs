@@ -1,136 +1,163 @@
 use bevy::prelude::*;
-use std::f32::consts::PI;
+use std::collections::BinaryHeap;
+use std::cmp::Ordering;
 
-const INITIAL_VELOCITY: f32 = 0.0;  
-const INITIAL_ANGLE: f32 = 90.0;    
-const GRAVITY: f32 = 980.0;
-const BOUNCE_COEFFICIENT: f32 = 0.75;
-const GROUND_HEIGHT: f32 = -200.0;
-const INITIAL_HEIGHT: f32 = 300.0;  
-
-pub fn bouncing_ball() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .init_resource::<Game>()
-        .init_state::<GameState>()
-        .add_systems(Startup, setup_cameras)
-        .add_systems(OnEnter(GameState::Playing), setup)
-        .add_systems(Update, ball_physics_system)
-        .run();
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
-enum GameState {
-    #[default]
-    Playing,
-    GameOver,
+// Components
+#[derive(Component)]
+struct Position {
+    x: i32,
+    y: i32,
 }
 
 #[derive(Component)]
-struct Ball {
-    velocity: Vec2,
-    bounce_count: u32,
-    max_bounces: u32,
-    is_stopped: bool,
+struct Destination {
+    x: i32,
+    y: i32,
 }
 
-#[derive(Resource, Default)]
-struct Game {
-    camera_should_focus: Vec3,
-    camera_is_focus: Vec3,
+#[derive(Component)]
+struct GridMap {
+    size: i32,
+    tiles: Vec<Vec<bool>>, // true if walkable
 }
 
-fn setup_cameras(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        projection: OrthographicProjection {
-            scale: 3.0,
-            ..Default::default()
-        }
-        .into(),
-        transform: Transform::from_xyz(0.0, 0.0, 100.0),
-        camera_2d: Camera2d {
-            // clear_color: ClearColor::default(),
-        },
-        ..Default::default()
-    });
+// Node structure for A*
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct Node {
+    f: i32,
+    g: i32,
+    x: i32,
+    y: i32,
 }
 
-fn setup(mut commands: Commands) {
-    let initial_velocity = Vec2::new(
-        INITIAL_VELOCITY * f32::cos(INITIAL_ANGLE * PI / 180.0),
-        INITIAL_VELOCITY * f32::sin(INITIAL_ANGLE * PI / 180.0),
-    );
-
-    // 공 스폰
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.0, 0.0, 1.0),
-                custom_size: Some(Vec2::new(30.0, 30.0)),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(0.0, INITIAL_HEIGHT, 1.0),
-            ..Default::default()
-        },
-        Ball {
-            velocity: initial_velocity,
-            bounce_count: 0,
-            max_bounces: 3,
-            is_stopped: false,
-        },
-    ));
-
-    // 바닥선
-    commands.spawn(SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgb(1.0, 0.0, 0.0),
-            custom_size: Some(Vec2::new(800.0, 2.0)),
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(0.0, GROUND_HEIGHT, 0.5),
-        ..Default::default()
-    });
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.f.cmp(&self.f)
+    }
 }
 
-fn ball_physics_system(
-    time: Res<Time>,
-    mut query: Query<(&mut Ball, &mut Transform)>,
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Path finding system
+fn path_finding_system(
+    mut query: Query<(&Position, &Destination, &GridMap)>,
 ) {
-    for (mut ball, mut transform) in query.iter_mut() {
-        if ball.is_stopped {
-            continue; // 공이 멈춘 상태면 물리 계산 스킵
+    for (pos, dest, grid) in query.iter() {
+        let path = find_path(pos, dest, grid);
+        // Use the path as needed
+    }
+}
+
+fn find_path(start: &Position, dest: &Destination, grid: &GridMap) -> Vec<(i32, i32)> {
+    let dir_y: [i32; 8] = [-1, 0, 1, 0, -1, 1, 1, -1];
+    let dir_x: [i32; 8] = [0, -1, 0, 1, -1, -1, 1, 1];
+    let cost: [i32; 8] = [10, 10, 10, 10, 14, 14, 14, 14];
+
+    let size = grid.size as usize;
+    let mut closed = vec![vec![false; size]; size];
+    let mut open = vec![vec![i32::MAX; size]; size];
+    let mut heap = BinaryHeap::new();
+    let mut parent = vec![vec![None; size]; size];
+
+    // Start position
+    open[start.y as usize][start.x as usize] = manhattan_distance(start.x, start.y, dest.x, dest.y);
+    heap.push(Node {
+        f: manhattan_distance(start.x, start.y, dest.x, dest.y),
+        g: 0,
+        x: start.x,
+        y: start.y,
+    });
+    parent[start.y as usize][start.x as usize] = Some((start.y, start.x));
+
+    while let Some(node) = heap.pop() {
+        // Skip if already visited
+        if closed[node.y as usize][node.x as usize] {
+            continue;
         }
 
-        // 중력 적용
-        ball.velocity.y -= GRAVITY * time.delta_seconds();
+        // Mark as visited
+        closed[node.y as usize][node.x as usize] = true;
 
-        // 위치 업데이트
-        transform.translation.x += ball.velocity.x * time.delta_seconds();
-        transform.translation.y += ball.velocity.y * time.delta_seconds();
+        // Check if reached destination
+        if node.x == dest.x && node.y == dest.y {
+            return reconstruct_path(&parent, start, dest);
+        }
 
-        // 바닥 충돌 체크
-        if transform.translation.y <= GROUND_HEIGHT {
-            // 바운스 처리
-            transform.translation.y = GROUND_HEIGHT;
-            ball.velocity.y = ball.velocity.y.abs() * BOUNCE_COEFFICIENT;
-            ball.bounce_count += 1;
+        // Check neighbors
+        for i in 0..dir_y.len() {
+            let next_y = node.y + dir_y[i];
+            let next_x = node.x + dir_x[i];
 
-            // 지정된 횟수만큼 튕긴 후 멈춤
-            if ball.bounce_count >= ball.max_bounces {
-                ball.is_stopped = true;
-                ball.velocity = Vec2::ZERO;
-                transform.translation.y = GROUND_HEIGHT;
+            // Bounds check
+            if !is_valid_position(next_x, next_y, grid.size) {
+                continue;
             }
-        }
 
-        // 디버그 출력
-        println!(
-            "Position: ({:.2}, {:.2}), Velocity: ({:.2}, {:.2}), Bounces: {}",
-            transform.translation.x,
-            transform.translation.y,
-            ball.velocity.x,
-            ball.velocity.y,
-            ball.bounce_count
-        );
+            // Wall check
+            if !grid.tiles[next_y as usize][next_x as usize] {
+                continue;
+            }
+
+            // Skip if closed
+            if closed[next_y as usize][next_x as usize] {
+                continue;
+            }
+
+            let g = node.g + cost[i];
+            let h = manhattan_distance(next_x, next_y, dest.x, dest.y);
+            let f = g + h;
+
+            if open[next_y as usize][next_x as usize] <= f {
+                continue;
+            }
+
+            open[next_y as usize][next_x as usize] = f;
+            heap.push(Node { f, g, x: next_x, y: next_y });
+            parent[next_y as usize][next_x as usize] = Some((node.y, node.x));
+        }
+    }
+
+    Vec::new() // No path found
+}
+
+fn manhattan_distance(x1: i32, y1: i32, x2: i32, y2: i32) -> i32 {
+    10 * (((x1 - x2).abs() + (y1 - y2).abs()))
+}
+
+fn is_valid_position(x: i32, y: i32, size: i32) -> bool {
+    x >= 0 && x < size && y >= 0 && y < size
+}
+
+fn reconstruct_path(
+    parent: &Vec<Vec<Option<(i32, i32)>>>,
+    start: &Position,
+    dest: &Destination,
+) -> Vec<(i32, i32)> {
+    let mut path = Vec::new();
+    let mut current = (dest.y, dest.x);
+    
+    while current != (start.y, start.x) {
+        path.push(current);
+        if let Some(prev) = parent[current.0 as usize][current.1 as usize] {
+            current = prev;
+        } else {
+            break;
+        }
+    }
+    path.push((start.y, start.x));
+    path.reverse();
+    path
+}
+
+// Plugin setup
+pub struct PathFindingPlugin;
+
+impl Plugin for PathFindingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, path_finding_system);
     }
 }

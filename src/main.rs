@@ -1,4 +1,4 @@
-use bevy_examples::{background, basic, character, keyboard, moving, network, physics, simulation};
+use bevy_examples::{background, basic, character, keyboard, moving, network, physics, simulation,algorithm};
 
 fn main() {
     // basic::cookbook::frame::example();
@@ -13,5 +13,6 @@ fn main() {
     // simulation::multi_window_queue_system_simulatuin::main();
     // simulation::solar_system::main();
     // simulation::blackhole::main();
-    simulation::stock::main();
+    // simulation::stock::main();
+    algorithm::astar::main();
 }

@@ -8,3 +8,4 @@ pub mod basic;
 pub mod network;
 pub mod physics;
 pub mod simulation;
+pub mod algorithm;
