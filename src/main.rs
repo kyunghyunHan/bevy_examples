@@ -8,11 +8,12 @@ fn main() {
     // character::example();
     // network::udp::example();
     // keyboard::example();
-    // simulation::bounce_ball::bouncing_ball();
+    // simulation::bounce_ball::
     // simulation::single_window_queuing_system_problem::main();
     // simulation::multi_window_queue_system_simulatuin::main();
     // simulation::solar_system::main();
     // simulation::blackhole::main();
     // simulation::stock::main();
-    algorithm::astar::main();
+    // algorithm::astar::main();
+    simulation::newton::main();
 }

@@ -5,3 +5,4 @@ pub mod calhoun_mouse;
 pub mod solar_system;
 pub mod blackhole;
 pub mod stock;
+pub mod newton;
