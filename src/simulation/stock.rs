@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+    sprite::{MaterialMesh2dBundle},
     render::mesh::Mesh,
 };
 
@@ -130,7 +130,7 @@ fn update_stock_price(
     mut sim_state: ResMut<SimulationState>,
     mut stocks: Query<&mut Stock>,
 ) {
-    sim_state.elapsed_time += time.delta_seconds();
+    sim_state.elapsed_time += time.delta_secs();
 
     if sim_state.elapsed_time >= sim_state.update_interval {
         for mut stock in stocks.iter_mut() {
@@ -257,31 +257,31 @@ fn update_price_display(
             (Color::rgb(1.0, 0.0, 0.0), "-")
         };
 
-        commands.spawn(Text2dBundle {
-            text: Text::from_sections([
-                TextSection {
-                    value: format!("{}: ${:.2} ", stock.name, stock.price),
-                    style: TextStyle {
-                        font_size: 30.0,
-                        color: Color::WHITE,
-                        ..default()
-                    },
-                },
-                TextSection {
-                    value: format!("{}${:.2} ({:.1}%)", 
-                        change_symbol,
-                        price_change.abs(),
-                        (price_change / (stock.price - price_change) * 100.0).abs()
-                    ),
-                    style: TextStyle {
-                        font_size: 30.0,
-                        color,
-                        ..default()
-                    },
-                },
-            ]),
-            transform: Transform::from_xyz(-CHART_WIDTH / 2.0, CHART_HEIGHT / 2.0 + 30.0, 0.3),
-            ..default()
-        });
+        // commands.spawn(Text2dBundle {
+        //     text: Text::from_sections([
+        //         TextSection {
+        //             value: format!("{}: ${:.2} ", stock.name, stock.price),
+        //             style: TextStyle {
+        //                 font_size: 30.0,
+        //                 color: Color::WHITE,
+        //                 ..default()
+        //             },
+        //         },
+        //         TextSection {
+        //             value: format!("{}${:.2} ({:.1}%)", 
+        //                 change_symbol,
+        //                 price_change.abs(),
+        //                 (price_change / (stock.price - price_change) * 100.0).abs()
+        //             ),
+        //             style: TextStyle {
+        //                 font_size: 30.0,
+        //                 color,
+        //                 ..default()
+        //             },
+        //         },
+        //     ]),
+        //     transform: Transform::from_xyz(-CHART_WIDTH / 2.0, CHART_HEIGHT / 2.0 + 30.0, 0.3),
+        //     ..default()
+        // });
     }
 }
