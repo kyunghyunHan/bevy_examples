@@ -78,8 +78,8 @@ impl StoneColor {
     /// 돌 색깔을 한국어 문자열로 변환
     fn to_korean(&self) -> &'static str {
         match self {
-            StoneColor::Black => "흑돌",
-            StoneColor::White => "백돌",
+            StoneColor::Black => "Black",
+            StoneColor::White => "White",
         }
     }
 
@@ -235,7 +235,7 @@ fn setup(
 
     // 턴 표시 UI 생성 (화면 왼쪽 위)
     commands.spawn((
-        Text::new("현재 턴: 흑돌"),
+        Text::new("This Turn: Black"),
         TextFont {
             font_size: 28.0,
             ..default()
@@ -375,7 +375,7 @@ fn update_turn_display(
     if let Ok(mut text) = turn_display.get_single_mut() {
         // 게임이 진행 중일 때만 턴 정보 업데이트
         if !game_state.game_over {
-            **text = format!("현재 턴: {}", game_state.current_player.to_korean());
+            **text = format!("This Turn: {}", game_state.current_player.to_korean());
         }
     }
 }
